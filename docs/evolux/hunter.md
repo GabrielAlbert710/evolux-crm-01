@@ -79,25 +79,23 @@ Toda correção fica em `result.corrections`.
 pnpm tsx scripts/evolux-hunter-analisar.ts <campaign_id> [quantas] [--forcar]
 ```
 
-## Publicar na VPS (ainda NÃO feito)
+## Publicar (ainda NÃO feito)
 
-A VPS roda as imagens publicadas pelo projeto oficial. Para a tela mostrar o Hunter e o cron
-rodá-lo, é preciso uma **imagem própria do app** construída a partir desta branch, e:
-
-1. `APP_IMAGE` no `.env` apontando para a imagem própria, com `APP_PULL_POLICY=never` (ou registry próprio);
-2. **não usar o botão "Atualizar agora"** nem `update.sh` sem antes trazer a versão nova do oficial
-   para a branch: eles regravam `APP_IMAGE` para a imagem oficial e o Hunter some (a tabela fica).
+A VPS de produção roda as imagens do projeto oficial. O Hunter só entra no ar com as imagens do
+fork, geradas pelo GitHub Actions (`deskcommcrm-evolux`, `deskcomm-worker-evolux`,
+`deskcomm-scheduler-evolux`, tag `evolux-<sha7>`), e **primeiro no HML**, com Supabase separado.
+Produção só depois de aprovado no HML. Passo a passo, ambientes e a regra de não usar
+"Atualizar agora": [o fork](fork.md).
 
 ## Sincronizar com o oficial depois
 
 ```bash
-git fetch origin --tags
-git merge v1.79.0        # ou origin/main — merge, nunca rebase/force
+git fetch upstream --tags
+git merge v1.79.0        # merge, nunca rebase/force
 pnpm vitest run tests/unit/evolux-hunter.test.ts tests/unit/pontos-de-ia-completude.test.ts
 ```
 
-Pontos de conflito prováveis: `lib/audit/actions.ts` (fim do array), `lib/i18n/dicionario.ts`
-(fim do objeto), `lib/ai/pontos/registro.ts`, a rota do cron e as 3 linhas de `_client.tsx`.
+Pontos de conflito prováveis: ver [o fork](fork.md#atualização).
 
 ## Contrato para Atlas e Maya
 
