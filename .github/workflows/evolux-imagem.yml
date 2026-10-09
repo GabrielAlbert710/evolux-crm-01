@@ -49,6 +49,11 @@ jobs:
       - name: Invariantes do banco (baseline install + update + RLS)
         env:
           GH_TOKEN: ${{ github.token }}
+          # O fork não publica release: sem isto, `conferir-isolamento-do-kit.sh`
+          # pergunta ao `gh release view` deste repositório, não acha nenhuma e
+          # reprova. A régua é a release oficial de que o fork partiu. As tags
+          # dela (e a v1.63.0, fixa no script) precisam existir no `origin`.
+          CONFERENCIA_KIT_RELEASE: v1.78.0
         run: pnpm test:db
 
   imagens:
