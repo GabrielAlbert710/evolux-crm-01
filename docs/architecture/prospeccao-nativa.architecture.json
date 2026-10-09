@@ -114,6 +114,20 @@
       "col": 5,
       "type": "component",
       "label": "ElevenLabs Agents privado e teste no navegador"
+    },
+    {
+      "id": "hunter",
+      "lane": "app",
+      "col": 3,
+      "type": "component",
+      "label": "[Evolux] Hunter: análise sem ferramentas e saneamento"
+    },
+    {
+      "id": "research",
+      "lane": "db",
+      "col": 4,
+      "type": "component",
+      "label": "[Evolux] Pesquisa por empresa: fatos, hipóteses e ICP"
     }
   ],
   "edges": [
@@ -216,6 +230,26 @@
       "from": "candidates",
       "to": "inbox",
       "label": "crm-summary autorizado: contexto comercial e fontes no painel lateral"
+    },
+    {
+      "from": "candidates",
+      "to": "hunter",
+      "label": "empresas já encontradas, sem nova busca"
+    },
+    {
+      "from": "hunter",
+      "to": "research",
+      "label": "saída validada; retry na mesma linha"
+    },
+    {
+      "from": "research",
+      "to": "operator",
+      "label": "ICP, faixa e análise visíveis na Prospecção"
+    },
+    {
+      "from": "research",
+      "to": "hunter",
+      "label": "falha volta à fila até 3 tentativas"
     }
   ]
 }

@@ -64,6 +64,19 @@ const DIR = join(process.cwd(), ".github/workflows");
  * que desliga um job de entrega fica visível em code review.
  */
 const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string }> = {
+  // --- [fork Evolux] docs/evolux/fork.md ------------------------------------
+  "evolux-imagem.yml::verificar": {
+    condicao: null,
+    efeito:
+      "Gate do fork Evolux (typecheck, lint, suíte unitária e test:db). Desligado, a imagem " +
+      "do fork deixaria de ter verificação nenhuma — a VPS não comporta rodá-la.",
+  },
+  "evolux-imagem.yml::imagens": {
+    condicao: null,
+    efeito:
+      "Publica as imagens -evolux no GHCR do fork. Desligado, o HML/produção do fork " +
+      "não recebe o código novo.",
+  },
   // --- a cadeia que leva o conserto até a VPS ---------------------------------
   "release.yml::abrir-pr-de-release": {
     condicao: "github.event_name == 'workflow_dispatch'",

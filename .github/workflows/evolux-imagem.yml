@@ -1,0 +1,116 @@
+# [fork Evolux IA] Verifica e publica as imagens do FORK — nunca as do oficial.
+#
+# Por que um workflow separado, e não o `publish-image.yml` do oficial: aquele
+# roda em `main`/`v*` e move canais (`latest`, `stable`) com o nome das imagens
+# oficiais; aqui as imagens têm sufixo `-evolux`, só amd64 (a VPS é x86) e só
+# saem de branch `evolux/**` ou tag `evolux-v*`. Ver docs/evolux/fork.md.
+#
+# A VPS (1 vCPU / 4 GB) não comporta typecheck inteiro, suíte completa, test:db
+# nem build — o runner do GitHub comporta. Por isso o gate mora aqui.
+name: "[Evolux] Verificar e publicar imagem do fork"
+
+on:
+  push:
+    branches: ["evolux/**"]
+    tags: ["evolux-v*"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: evolux-imagem-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # Sem `if:` de propósito (tests/unit/gatilho-dos-jobs-de-entrega.test.ts): o
+  # que restringe ao fork são os gatilhos acima — `evolux/**` e `evolux-v*` não
+  # existem no repositório oficial.
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/preparar-node
+        timeout-minutes: 5
+      - name: Typecheck (repositório inteiro)
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Testes unitários (suíte inteira)
+        run: pnpm test:unit
+      - name: Invariantes do banco (baseline install + update + RLS)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm test:db
+
+  imagens:
+    needs: verificar
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: deskcommcrm-evolux
+            dockerfile: Dockerfile
+          - name: deskcomm-worker-evolux
+            dockerfile: Dockerfile.worker
+          - name: deskcomm-scheduler-evolux
+            dockerfile: Dockerfile.scheduler
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Versão reportada em /api/v1/health: a base oficial + a marca do fork,
+      # para "o que está rodando aqui?" responder sem ambiguidade.
+      - name: Resolver APP_VERSION
+        id: ver
+        run: |
+          base=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo v0.0.0)
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "value=${GITHUB_REF_NAME#evolux-v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${base#v}-evolux.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.name }}
+          flavor: latest=false
+          # Tags IMUTÁVEIS por commit; a VPS aponta para uma delas, nunca para
+          # um canal móvel (mesma doutrina do oficial: docs/doctrine/packaging.md).
+          tags: |
+            type=sha,prefix=evolux-,format=short
+            type=match,pattern=evolux-v(.*),group=1
+            type=ref,event=branch
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build e push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ steps.ver.outputs.value }}
+          cache-from: type=gha,scope=evolux-${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=evolux-${{ matrix.name }}

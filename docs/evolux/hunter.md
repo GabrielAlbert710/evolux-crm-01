@@ -1,6 +1,6 @@
 # Hunter — inteligência comercial (fork Evolux IA)
 
-> Mudança **do fork Evolux IA**, fora do projeto oficial DeskcommCRM. Branch: `evolux/hunter`,
+> Ver também [o fork](fork.md). Mudança **do fork Evolux IA**, fora do projeto oficial DeskcommCRM. Branch: `evolux/hunter`,
 > criada a partir da tag `v1.78.0`. Nenhum pull request foi aberto no projeto oficial.
 
 ## O que é

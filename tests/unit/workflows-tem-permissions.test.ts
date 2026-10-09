@@ -52,6 +52,9 @@ const DIR = join(process.cwd(), ".github/workflows");
  * acrescente, e acrescentar sem razão é visível em code review.
  */
 const ESCRITA_JUSTIFICADA: Record<string, string> = {
+  // [fork Evolux] docs/evolux/fork.md
+  "evolux-imagem.yml::packages: write":
+    "publica as imagens -evolux no GHCR do fork; só no job `imagens`, depois do gate `verificar`",
   "publish-image.yml::packages: write":
     "publica a imagem do app no GHCR — é o artefato que o self-hoster instala",
   "vigia-de-colisao.yml::pull-requests: write":
