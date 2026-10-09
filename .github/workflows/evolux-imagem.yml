@@ -37,6 +37,10 @@ jobs:
       - uses: ./.github/actions/preparar-node
         timeout-minutes: 5
       - name: Typecheck (repositório inteiro)
+        # Mesmo teto do `ci.yml` oficial: sem ele o tsc estoura o heap padrão
+        # do Node e aborta com exit 134 (medido na run #1 do fork).
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: pnpm typecheck
       - name: Lint
         run: pnpm lint
