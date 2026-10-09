@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.typecheck.json",
+  "compilerOptions": { "noEmit": true, "incremental": false },
+  "include": [
+    "next-env.d.ts",
+    "lib/prospecting/hunter/*.ts",
+    "app/api/v1/prospecting/research/route.ts",
+    "app/api/v1/cron/prospecting/route.ts",
+    "app/app/prospecting/_hunter.tsx",
+    "app/app/prospecting/_client.tsx",
+    "lib/ai/pontos/registro.ts",
+    "lib/audit/actions.ts",
+    "lib/i18n/dicionario.ts",
+    "tests/unit/evolux-hunter.test.ts"
+  ],
+  "files": []
+}

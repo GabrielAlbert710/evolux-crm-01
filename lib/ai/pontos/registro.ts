@@ -249,6 +249,19 @@ export const PONTOS_DE_IA: readonly PontoDeIa[] = [
     registraEm: "llm_calls",
   },
   {
+    // [fork Evolux] Hunter — docs/evolux/hunter.md
+    id: "prospecting_research",
+    rotulo: "Pesquisar empresas da prospecção (Hunter)",
+    oQueFaz:
+      "Analisa cada empresa encontrada na prospecção, separa fatos de hipóteses e calcula o ICP. Trabalha nos bastidores e não envia mensagem.",
+    papel: "entender",
+    exige: {},
+    emissor: "lib/prospecting/hunter/worker.ts",
+    sintomaDeFalha:
+      "A empresa fica com a análise pendente ou com falha na tela de Prospecção; nada é enviado a ninguém.",
+    registraEm: "llm_calls",
+  },
+  {
     id: "draft_suggestion",
     rotulo: "Sugerir resposta ao atendente",
     oQueFaz:

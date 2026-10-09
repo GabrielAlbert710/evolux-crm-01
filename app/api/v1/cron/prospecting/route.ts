@@ -5,6 +5,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { getRequestPool } from "@/lib/agent-engine/db/request-pool";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { tickProspecting } from "@/lib/prospecting/worker";
+import { tickHunter } from "@/lib/prospecting/hunter/worker";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,19 @@ async function handle(req: NextRequest) {
   if (!autorizaCron(req))
     return fail("forbidden", "Credencial de execução inválida.", 403, { requestId });
   try {
-    return ok(await tickProspecting(getRequestPool(), createAdminClient()), { requestId });
+    const prospeccao = await tickProspecting(getRequestPool(), createAdminClient());
+    // [fork Evolux] Hunter na mesma batida (docs/evolux/hunter.md). Falha dele
+    // não derruba a prospecção: vai para o log e para a resposta.
+    let hunter: Awaited<ReturnType<typeof tickHunter>> | { error: string };
+    try {
+      // Limite e prazo curtos: o scheduler corta esta rota em 240s, e a prospecção vem antes.
+      hunter = await tickHunter(getRequestPool(), { limite: 2, prazoMs: 50_000 });
+    } catch (err) {
+      const detalhe = err instanceof Error ? err.message : String(err);
+      logger.error("[prospecting.cron] tickHunter lançou", { error: detalhe, requestId });
+      hunter = { error: detalhe };
+    }
+    return ok({ ...prospeccao, hunter }, { requestId });
   } catch (err) {
     // O `catch` era SEM PARÂMETRO: o objeto do erro não ficava de fora do log,
     // ele era DESCARTADO — não existia em variável nenhuma. Num cron, que roda

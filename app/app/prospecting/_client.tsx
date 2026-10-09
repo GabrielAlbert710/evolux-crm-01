@@ -18,6 +18,7 @@ import {
   type Prospect,
 } from "@/lib/prospecting/schema";
 import { ProspectingAgentBuilder, type CreatedProspectingAgent } from "./_create-agent";
+import { HunterBarra, HunterCelula } from "./_hunter"; // [fork Evolux]
 import type { ProspectingAgentSetupInput } from "@/lib/prospecting/agent-setup-schema";
 
 type Campaign = {
@@ -1007,6 +1008,7 @@ export function ProspectingClient() {
                             "Encontrado é diferente de qualificado. A qualificação depende do que for confirmado na conversa.",
                           )}
                         </p>
+                        {campaign && <HunterBarra campaignId={campaign.id} total={candidates.length} />}
                       </div>
                       {canSelect && (
                         <div className="flex flex-wrap items-center gap-2">
@@ -1158,6 +1160,7 @@ export function ProspectingClient() {
                                 {c.data.category}
                               </p>
                               <p className="mt-1 text-xs">{c.data.phone ?? t("Sem telefone")}</p>
+                              <HunterCelula campaignId={c.campaign_id} candidateId={c.id} />
                             </td>
                             <td className="max-w-64 p-4 align-top">
                               <p className="text-xs text-muted-foreground">{c.data.address}</p>
